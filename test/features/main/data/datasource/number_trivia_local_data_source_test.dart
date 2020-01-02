@@ -1,15 +1,11 @@
 import 'dart:convert';
 
-import 'package:dartz/dartz.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:mockito/mockito.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trivia_number/core/error/exceptions.dart';
 import 'package:trivia_number/features/main/data/datasources/number_trivia_local_data_source.dart';
 import 'package:trivia_number/features/main/data/models/number_trivia_response.dart';
-import 'package:trivia_number/features/main/domain/entities/number_trivia_bo.dart';
 
 import '../../../../fixtures/fixture_reader.dart';
 
