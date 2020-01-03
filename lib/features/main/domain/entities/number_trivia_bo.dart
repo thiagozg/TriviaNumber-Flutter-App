@@ -6,8 +6,8 @@ class NumberTriviaBO extends Equatable {
   final double number;
 
   NumberTriviaBO({
-    @required this.text, 
-    @required this.number
+    @required this.number,
+    @required this.text
   });
 
   @override
