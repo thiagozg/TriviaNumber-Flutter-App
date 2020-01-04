@@ -1,5 +1,6 @@
 import 'package:data_connection_checker/data_connection_checker.dart';
 import 'package:get_it/get_it.dart';
+import 'package:http/io_client.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trivia_number/core/network/network_info.dart';
 import 'package:trivia_number/core/util/input_converter.dart';
@@ -12,52 +13,53 @@ import 'package:trivia_number/features/main/domain/usecases/get_random_number_tr
 import 'package:trivia_number/features/main/presentation/bloc/number_trivia_bloc.dart';
 import 'package:http/http.dart' as http;
 
-final _serviceLocator = GetIt.instance;
+final serviceLocator = GetIt.instance;
 
 // returning Future<void> cuz is async
 Future<void> init() async {
-  _initFeatures();
+  await _initExternalLibraries();
   _initCore();
-  _initExternalLibraries();
+  _initFeatures();
 }
 
 void _initFeatures() {
   /// Main - Number Trivia
   /// Bloc
-  _serviceLocator.registerFactory(() => NumberTriviaBloc(
-      concrete: _serviceLocator(),
-      random: _serviceLocator(),
-      inputConverter: _serviceLocator()
+  serviceLocator.registerFactory(() => NumberTriviaBloc(
+      concrete: serviceLocator(),
+      random: serviceLocator(),
+      inputConverter: serviceLocator()
   ));
 
   /// Use Cases
-  _serviceLocator.registerLazySingleton(() => GetConcreteNumberTriviaUseCase(_serviceLocator()));
-  _serviceLocator.registerLazySingleton(() => GetRandomNumberTriviaUseCase(_serviceLocator()));
+  serviceLocator.registerLazySingleton(() => GetConcreteNumberTriviaUseCase(serviceLocator()));
+  serviceLocator.registerLazySingleton(() => GetRandomNumberTriviaUseCase(serviceLocator()));
 
   /// Repository
-  _serviceLocator.registerLazySingleton<NumberTriviaRepository>(() => NumberTriviaRepositoryImpl(
-      remoteDataSource: _serviceLocator(),
-      localDataSource: _serviceLocator(),
-      networkInfo: _serviceLocator()
+  serviceLocator.registerLazySingleton<NumberTriviaRepository>(() => NumberTriviaRepositoryImpl(
+      remoteDataSource: serviceLocator(),
+      localDataSource: serviceLocator(),
+      networkInfo: serviceLocator()
   ));
 
   /// Data Sources
-  _serviceLocator.registerLazySingleton<NumberTriviaRemoteDataSource>(() => NumberTriviaRemoteDataSourceImpl(
-      client: _serviceLocator()
+  serviceLocator.registerLazySingleton<NumberTriviaRemoteDataSource>(() => NumberTriviaRemoteDataSourceImpl(
+//      client: IOClient()
+      client: serviceLocator()
   ));
-  _serviceLocator.registerLazySingleton<NumberTriviaLocalDataSource>(() => NumberTriviaLocalDataSourceImpl(
-      sharedPreferences: _serviceLocator()
+  serviceLocator.registerLazySingleton<NumberTriviaLocalDataSource>(() => NumberTriviaLocalDataSourceImpl(
+      sharedPreferences: serviceLocator()
   ));
 }
 
 void _initCore() {
-  _serviceLocator.registerLazySingleton(() => InputConverter());
-  _serviceLocator.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(_serviceLocator()));
+  serviceLocator.registerLazySingleton(() => InputConverter());
+  serviceLocator.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(serviceLocator()));
 }
 
 Future<void> _initExternalLibraries() async {
   final sharedPreferences = await SharedPreferences.getInstance();
-  _serviceLocator.registerLazySingleton(() => sharedPreferences);
-  _serviceLocator.registerLazySingleton(() => http.Client);
-  _serviceLocator.registerLazySingleton(() => DataConnectionChecker());
+  serviceLocator.registerLazySingleton(() => sharedPreferences);
+  serviceLocator.registerLazySingleton(() => http.Client());
+  serviceLocator.registerLazySingleton(() => DataConnectionChecker());
 }
