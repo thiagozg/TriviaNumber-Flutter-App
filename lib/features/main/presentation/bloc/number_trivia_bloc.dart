@@ -34,42 +34,48 @@ class NumberTriviaBloc extends Bloc<NumberTriviaEvent, NumberTriviaState> {
         getRandomNumberTriviaUseCase = random;
 
   @override
-  NumberTriviaState get initialState => EmptyState();
+  NumberTriviaState get initialState => NumberTriviaState.empty();
 
   @override
   Stream<NumberTriviaState> mapEventToState(
       NumberTriviaEvent event,
   ) async* {
-    // TODO: use union...
-    if (event is GetTriviaForConcreteNumberEvent) {
-      final inputEither = inputConverter.stringToUnsignedInteger(event.number);
+    yield* event.join(
+        (concrete) => _handleConcreteEvent(concrete.number),
+        (random) => _handleRandomEvent()
+    );
+  }
 
-      // every time yield something, is going to emit the state
-      yield* inputEither.fold(_onFailureInputConverter, _onSuccessInputConverter);
-    } else if (event is GetTriviaForRandomNumberEvent) {
-      yield LoadingState();
-      final failureOrTrivia = await getRandomNumberTriviaUseCase(NoParams());
-      yield* _eitherLoadedOrErrorState(failureOrTrivia);
-    }
+  Stream<NumberTriviaState> _handleRandomEvent() async* {
+    yield NumberTriviaState.loading();
+    final failureOrTrivia = await getRandomNumberTriviaUseCase(NoParams());
+    yield* _eitherLoadedOrErrorState(failureOrTrivia);
+  }
+
+  Stream<NumberTriviaState> _handleConcreteEvent(String number) async* {
+    final inputEither = inputConverter.stringToUnsignedInteger(number);
+
+    // every time yield something, is going to emit the state
+    yield* inputEither.fold(_onFailureInputConverter, _onSuccessInputConverter);
   }
 
   Stream<NumberTriviaState> _onSuccessInputConverter(integer) async* {
     // emitting state before do the network or cache request
-    yield LoadingState();
+    yield NumberTriviaState.loading();
     final failureOrTrivia = await getConcreteNumberTriviaUseCase(Params(number: integer));
     yield* _eitherLoadedOrErrorState(failureOrTrivia);
   }
 
   Stream<NumberTriviaState> _onFailureInputConverter(failure) async* {
-    yield ErrorState(message: invalidInputFailureMessage);
+    yield NumberTriviaState.error(invalidInputFailureMessage);
   }
 
   Stream<NumberTriviaState> _eitherLoadedOrErrorState(
       Either<Failure, NumberTriviaBO> either
   ) async* {
     yield either.fold(
-        (failure) => ErrorState(message: failure.mapToMessage()),
-        (trivia) => LoadedState(triviaBO: trivia)
+        (failure) => NumberTriviaState.error(failure.mapToMessage()),
+        (trivia) => NumberTriviaState.loaded(trivia)
     );
   }
 }

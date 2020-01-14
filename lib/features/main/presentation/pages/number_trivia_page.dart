@@ -38,16 +38,11 @@ class NumberTriviaPage extends StatelessWidget {
   }
 
   StatelessWidget _handleBlocState(NumberTriviaState state) {
-    switch (state.runtimeType) {
-      case LoadingState:
-        return LoadingWidget();
-      case LoadedState:
-        return TriviaDisplay(numberTriviaBO: (state as LoadedState).triviaBO);
-      case ErrorState:
-        return MessageDisplay(message: (state as ErrorState).message);
-      case EmptyState:
-      default:
-        return MessageDisplay(message: 'Start searching!');
-    }
+    return state.join(
+        (empty) => MessageDisplay(message: 'Start searching!'),
+        (loading) => LoadingWidget(),
+        (loaded) => TriviaDisplay(numberTriviaBO: loaded.triviaBO),
+        (error) => MessageDisplay(message: error.message)
+    );
   }
 }
